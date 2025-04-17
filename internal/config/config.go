@@ -49,6 +49,7 @@ type DatabaseCfg struct {
 	DBName     string
 	DBHost     string
 	DBPort     string
+	DBRetries  int
 	RDSCa      string
 }
 
@@ -118,6 +119,9 @@ func Get() *TrackerConfig {
 
 	// debug config
 	options.SetDefault("debug.log.status.json", false)
+
+	// global database config
+	options.SetDefault("db.retries", 3)
 
 	if clowder.IsClowderEnabled() {
 		cfg := clowder.LoadedConfig
@@ -189,6 +193,7 @@ func Get() *TrackerConfig {
 			DBName:     options.GetString("db.name"),
 			DBHost:     options.GetString("db.host"),
 			DBPort:     options.GetString("db.port"),
+			DBRetries:  options.GetInt("db.retries"),
 		},
 		CloudwatchConfig: CloudwatchCfg{
 			CWLogGroup:  options.GetString("logGroup"),
@@ -224,7 +229,6 @@ func Get() *TrackerConfig {
 		// write the Kafka CA path using the app-common-go package
 		if broker.Cacert != nil {
 			caPath, err := clowder.LoadedConfig.KafkaCa(broker)
-
 			if err != nil {
 				panic("Kafka CA Failed to Write")
 			}
@@ -235,7 +239,6 @@ func Get() *TrackerConfig {
 		// write the RDS CA using the app-common-go package
 		if clowder.LoadedConfig.Database.RdsCa != nil {
 			rdsCAPath, err := clowder.LoadedConfig.RdsCa()
-
 			if err != nil {
 				panic("RDS CA Failed to Write")
 			}
